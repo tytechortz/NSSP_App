@@ -1,4 +1,5 @@
 .env
+users.py
 venv
 .mapbox_token
 *.csv
