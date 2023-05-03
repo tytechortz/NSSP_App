@@ -7,6 +7,7 @@ import dash_auth
 import pandas as pd
 from io import StringIO
 from users import VALID_USERNAME_PASSWORD_PAIRS, username, password
+import datetime
 
 
 app = Dash(__name__, suppress_callback_exceptions=True, external_stylesheets=[dbc.themes.DARKLY])
@@ -22,27 +23,24 @@ print(username)
 
 header = html.Div("NSSP DATA", className="h2 p-2 text-white bg-primary text-center")
 
-URL = "https://essence.syndromicsurveillance.org/nssp_essence/api/timeSeries?endDate=9Feb2021&medicalGrouping=injury&percentParam=noPercent&geographySystem=hospitaldhhsregion&datasource=va_hospdreg&detector=probrepswitch&startDate=11Nov2020&timeResolution=daily&medicalGroupingSystem=essencesyndromes&userId=455&aqtTarget=TimeSeries"
 
-r = requests.get(url=URL, auth=(username, password))
 # print(type(r))
 
-data = r.json()
+
 # print(len(data))
-keys = data.keys()
+
 # for key in keys:
 #     print(key)
 
 # print(data['timeSeriesData'][0]['count'])
 
-df = pd.DataFrame.from_dict(data['timeSeriesData'])
-df.drop(['details', 'altText'], axis=1, inplace=True)
+
 # print(type(data))
 # df = pd.DataFrame.from_dict(data)
 # df = pd.DataFrame(r['data'])
 # df = pd.read_csv(StringIO(r), sep=',')
 # df = pd.read_csv(URL)
-print(df)
+
 bgcolor = "#f3f3f1"  # mapbox light map land color
 
 template = {"layout": {"paper_bgcolor": bgcolor, "plot_bgcolor": bgcolor}}
@@ -68,10 +66,10 @@ app.layout = dbc.Container(
         dbc.Row([
             dcc.DatePickerRange(
             id='my-date-picker-range',
-            min_date_allowed=date(1995, 8, 5),
-            max_date_allowed=date(2017, 9, 19),
-            initial_visible_month=date(2017, 8, 5),
-            end_date=date(2017, 8, 25)
+            # min_date_allowed=date(1995, 8, 5),
+            # max_date_allowed=date(2017, 9, 19),
+            initial_visible_month=date(2022, 8, 5),
+            end_date=date(2023, 1, 1)
             ),
         ]),
         dbc.Row([
@@ -87,6 +85,24 @@ app.layout = dbc.Container(
     Input('my-date-picker-range', 'start_date'),
     Input('my-date-picker-range', 'end_date'))
 def update_output(start_date, end_date):
+    print(start_date)
+    start_year = start_date[0:4]
+    print(start_year)
+
+    start_date_new = datetime.datetime.strptime(start_date, '%Y-%m-%d').strftime('%d%b%Y')
+    end_date_new = datetime.datetime.strptime(end_date, '%Y-%m-%d').strftime('%d%b%Y')
+    print(start_date_new)
+
+    URL = "https://essence.syndromicsurveillance.org/nssp_essence/api/timeSeries?endDate=" + end_date_new + "&medicalGrouping=injury&percentParam=noPercent&geographySystem=hospitaldhhsregion&datasource=va_hospdreg&detector=probrepswitch&startDate=" + start_date_new + "&timeResolution=daily&medicalGroupingSystem=essencesyndromes&userId=455&aqtTarget=TimeSeries"
+
+    r = requests.get(url=URL, auth=(username, password))
+
+    data = r.json()
+
+    
+    df = pd.DataFrame.from_dict(data['timeSeriesData'])
+    df.drop(['details', 'altText'], axis=1, inplace=True)
+    
     
     fig = go.Figure()
 
