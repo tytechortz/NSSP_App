@@ -93,6 +93,12 @@ def update_output(start_date, end_date):
         y=df['count']
     ))
 
+    fig.update_layout(
+        paper_bgcolor="#1f2630",
+        plot_bgcolor="#1f2630",
+        font=dict(color="#2cfec1"),
+    )
+
 
     return fig
 
