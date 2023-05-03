@@ -1,5 +1,6 @@
 import requests
 from dash import Dash, html, dcc, Input, Output
+import plotly.graph_objs as go
 import dash_bootstrap_components as dbc
 from datetime import date
 import dash_auth
@@ -42,6 +43,24 @@ df.drop(['details', 'altText'], axis=1, inplace=True)
 # df = pd.read_csv(StringIO(r), sep=',')
 # df = pd.read_csv(URL)
 print(df)
+bgcolor = "#f3f3f1"  # mapbox light map land color
+
+template = {"layout": {"paper_bgcolor": bgcolor, "plot_bgcolor": bgcolor}}
+
+
+def blank_fig(height):
+    """
+    Build blank figure with the requested height
+    """
+    return {
+        "data": [],
+        "layout": {
+            "height": height,
+            "template": template,
+            "xaxis": {"visible": False},
+            "yaxis": {"visible": False},
+        },
+    }
 
 app.layout = dbc.Container(
     [
@@ -54,29 +73,30 @@ app.layout = dbc.Container(
             initial_visible_month=date(2017, 8, 5),
             end_date=date(2017, 8, 25)
             ),
-            html.Div(id='output-container-date-picker-range'),
         ]),
+        dbc.Row([
+            dbc.Col([
+                dcc.Graph(id='incident-graph', figure=blank_fig(500)),
+            ], width=12),
+        ])
     ],
 )
 
 @app.callback(
-    Output('output-container-date-picker-range', 'children'),
+    Output('incident-graph', 'figure'),
     Input('my-date-picker-range', 'start_date'),
     Input('my-date-picker-range', 'end_date'))
 def update_output(start_date, end_date):
-    string_prefix = 'You have selected: '
-    if start_date is not None:
-        start_date_object = date.fromisoformat(start_date)
-        start_date_string = start_date_object.strftime('%B %d, %Y')
-        string_prefix = string_prefix + 'Start Date: ' + start_date_string + ' | '
-    if end_date is not None:
-        end_date_object = date.fromisoformat(end_date)
-        end_date_string = end_date_object.strftime('%B %d, %Y')
-        string_prefix = string_prefix + 'End Date: ' + end_date_string
-    if len(string_prefix) == len('You have selected: '):
-        return 'Select a date to see it displayed here'
-    else:
-        return string_prefix
+    
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatter(
+        x=df['date'],
+        y=df['count']
+    ))
+
+
+    return fig
 
 
 if __name__ == '__main__':
